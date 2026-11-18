@@ -4,7 +4,7 @@ const storageKey = 'atu-parking-demo-v1';
 // Each demo bay follows a mapped road segment, with a signed offset from its centreline.
 const roadsideGroups = [
   { prefix: 'A', road: 'Фурқат көшесі', way: 23994018, segment: 3, fractions: [0.22, 0.31, 0.40, 0.49], offset: 6, occupied: [2] },
-  { prefix: 'B', road: 'Корпустың оңтүстігіндегі жол', way: 51969503, segment: 1, fractions: [0.24, 0.43, 0.62, 0.81], offset: 5, occupied: [1, 3] },
+  { prefix: 'B', road: 'Корпустың оңтүстігіндегі жол', way: 51969503, segment: 1, fractions: [0.24, 0.43, 0.62, 0.81], offset: 5, occupied: [1, 3], price: 300 },
 ];
 
 function roadsideSpots(group) {
@@ -26,6 +26,7 @@ function roadsideSpots(group) {
     return {
       id: group.prefix + '0' + (index + 1),
       road: group.road,
+      price: group.price || 0,
       coordinates: point(0, group.offset),
       outline: [[-3, -1.25], [3, -1.25], [3, 1.25], [-3, 1.25]].map(([x, y]) => point(x, group.offset + y)),
       occupied: group.occupied.includes(index + 1),
@@ -45,6 +46,8 @@ let selected = null;
 let map;
 let parkingRole = null;
 let showCampus;
+const paymentDialog = element('payment-dialog');
+let pendingPayment = null;
 
 function restoreParking() {
   try {
@@ -84,21 +87,62 @@ function save() {
   }
 }
 
+function reserve(spot) {
+  restoreParking();
+  if (parkingRole !== 'user' || occupied(spot) || overrides.reservedSpot) return false;
+  overrides[spot.id] = true;
+  overrides.reservedSpot = spot.id;
+  if (filter === 'free') filter = 'all';
+  save();
+  element('announcement').textContent = spot.id + ' орны брондалды.';
+  return true;
+}
+
+function fee(spot) {
+  return spot.price ? spot.price + ' ₸' : 'Тегін';
+}
+
 function choose(spot, moveMap) {
-  if (parkingRole === 'user') {
-    restoreParking();
-    if (!occupied(spot) && !overrides.reservedSpot) {
-      overrides[spot.id] = true;
-      overrides.reservedSpot = spot.id;
-      if (filter === 'free') filter = 'all';
-      save();
-      element('announcement').textContent = spot.id + ' орны сізге белгіленді.';
-    }
-  }
   selected = spot;
   if (moveMap && map) map.panTo(spot.coordinates);
+  restoreParking();
+  if (parkingRole === 'user' && !occupied(spot) && !overrides.reservedSpot) {
+    if (spot.price) {
+      pendingPayment = spot;
+      element('payment-spot').textContent = spot.id + ' · ' + fee(spot);
+      paymentDialog.showModal();
+    } else {
+      reserve(spot);
+    }
+  }
   render();
 }
+
+paymentDialog.addEventListener('close', () => {
+  if (paymentDialog.returnValue === 'confirm' && pendingPayment) {
+    const booked = reserve(pendingPayment);
+    render();
+    if (!booked) element('announcement').textContent = 'Брондау орындалмады. Орын күйін қайта тексеріңіз.';
+    element('reservation').focus();
+  }
+  pendingPayment = null;
+  paymentDialog.returnValue = '';
+});
+
+element('cancel-reservation').addEventListener('click', () => {
+  if (parkingRole !== 'user') return;
+  restoreParking();
+  const id = overrides.reservedSpot;
+  if (id) {
+    overrides[id] = false;
+    delete overrides.reservedSpot;
+    filter = 'all';
+    save();
+    element('announcement').textContent = id + ' орнының броны жойылды.';
+  }
+  render();
+  element('find-free').focus();
+});
 
 function render() {
   const busy = spots.filter(occupied).length;
@@ -110,7 +154,7 @@ function render() {
     button.setAttribute('aria-pressed', String(button.dataset.filter === filter));
   }
 
-  const reservedSpot = overrides.reservedSpot;
+  const reservedSpot = spots.find(spot => spot.id === overrides.reservedSpot);
   const canReserve = parkingRole === 'user' && !reservedSpot;
   element('find-free').hidden = !canReserve;
   const list = element('spots');
@@ -136,7 +180,8 @@ function render() {
         node.classList.toggle('busy', occupied(spot));
         node.classList.toggle('free', !occupied(spot));
         node.classList.toggle('selected', active);
-        node.setAttribute('aria-label', spot.id + ' · ' + status(spot));
+        node.classList.toggle('paid-spot', Boolean(spot.price));
+        node.setAttribute('aria-label', spot.id + ' · ' + status(spot) + ' · ' + fee(spot));
       } else {
         marker.remove();
       }
@@ -149,10 +194,14 @@ function render() {
     button.dataset.spot = spot.id;
     button.setAttribute('aria-pressed', String(active));
     button.innerHTML = '<i class="dot ' + classify(spot) + '"></i>' + spot.id + '<small>' + status(spot) + '</small>';
+    const price = document.createElement('span');
+    price.className = spot.price ? 'spot-price paid-price' : 'spot-price';
+    price.textContent = fee(spot);
+    button.append(price);
     if (canReserve && !occupied(spot)) {
       const action = document.createElement('span');
       action.className = 'spot-action';
-      action.textContent = 'Таңдау';
+      action.textContent = 'Брондау';
       button.append(action);
     }
     button.addEventListener('click', () => choose(spot, true));
@@ -164,13 +213,14 @@ function render() {
   element('detail').hidden = !selected;
   const reservation = element('reservation');
   reservation.hidden = parkingRole !== 'user';
-  reservation.textContent = reservedSpot
-    ? 'Сізге белгіленген орын: ' + reservedSpot
-    : 'Бос орынның «Таңдау» батырмасын басыңыз.';
+  element('reservation-text').textContent = reservedSpot
+    ? 'Белсенді бронь · ' + reservedSpot.id + ' · ' + fee(reservedSpot)
+    : 'Бос орынды таңдап, брондаңыз.';
+  element('cancel-reservation').hidden = !reservedSpot;
   if (selected) {
     element('choice').textContent = selected.id + ' · Демо орын';
     element('chosen-status').textContent = status(selected);
-    element('chosen-road').textContent = selected.road;
+    element('chosen-road').textContent = selected.road + ' · ' + fee(selected);
     element('toggle').textContent = occupied(selected) ? 'Бос деп белгілеу' : 'Бос емес деп белгілеу';
   }
 }

@@ -66,12 +66,12 @@
 <div class="panel-head"><div><h2>Кампус картасы</h2><p>Фурқат көшесі, 348/4 · Алматы · Офлайн карта</p></div><button id="recenter" type="button" title="Кампусқа оралу" aria-label="Кампусқа оралу">◎</button></div>
 <div id="map" aria-label="Сайран кампусының интерактивті картасы"></div>
 <div id="map-warning" hidden>Интерактивті карта жүктелмеді.</div>
-<div class="legend"><span><i class="dot free"></i>Бос</span><span><i class="dot busy"></i>Бос емес</span><span><i class="dot total"></i>АТУ корпусы</span></div>
+<div class="legend"><span><i class="dot free"></i>Бос</span><span><i class="dot busy"></i>Бос емес</span><span><i class="dot paid-key"></i>Ақылы орын</span><span><i class="dot total"></i>АТУ корпусы</span></div>
 </div>
 <aside class="panel side">
 <div class="panel-head"><div><h2>Тұрақ орындары</h2><p>Картадан немесе тізімнен таңдаңыз</p></div></div>
 <div class="filters" aria-label="Күй бойынша сүзгі"><button data-filter="all" aria-pressed="true">Барлығы</button><button data-filter="free" aria-pressed="false">Бос</button><button data-filter="busy" aria-pressed="false">Бос емес</button></div>
-<p id="reservation" class="reservation" hidden></p>
+<div id="reservation" class="reservation" tabindex="-1" hidden><span id="reservation-text"></span><button type="button" id="cancel-reservation" hidden>Броньды болдырмау</button></div>
 <div id="spots" class="spots"></div>
 <div class="detail" id="detail" hidden><div><strong id="choice"></strong><span id="chosen-status"></span></div><p id="chosen-road"></p><button id="toggle" type="button" hidden></button></div>
 </aside>
@@ -79,6 +79,14 @@
 <section class="notice"><div><strong>Демо режим</strong><p>Көшелер мен ғимараттар OpenStreetMap дерегінен алынды. Жол жиегіндегі орындар демо үшін сызылды. Олардың нақты тұрақ екені тексерілмеген және күйлері датчиктен алынбайды.</p></div><button id="reset" type="button" hidden>Күйлерді қалпына келтіру</button></section>
 <span id="announcement" class="sr-only" role="status"></span>
 </main>
+<dialog id="payment-dialog" aria-labelledby="payment-title">
+<form method="dialog">
+<h2 id="payment-title">Ақылы орынды брондау</h2>
+<p id="payment-spot"></p>
+<p>Көрсетілген сома бір броньға есептеледі. Демо режимде ақша алынбайды.</p>
+<div class="payment-actions"><button value="cancel" autofocus>Бас тарту</button><button value="confirm">Демо төлемді растау</button></div>
+</form>
+</dialog>
 <footer class="wrap"><span id="offline-state">ATU Smart Parking</span><a href="https://atu.edu.kz/kk/" target="_blank" rel="noopener">АТУ сайты ↗</a></footer>
 </body>
 </html>

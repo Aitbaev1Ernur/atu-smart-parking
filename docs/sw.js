@@ -1,5 +1,5 @@
 const cachePrefix = 'atu-parking-offline:' + self.registration.scope + ':';
-const cacheName = cachePrefix + 'v1';
+const cacheName = cachePrefix + 'v2';
 const assets = [
   './index.html', './style.css', './atu.svg', './leaflet.css', './leaflet.js',
   './campus-map.js', './app.js', './login.js', './atu-parking-offline.html',
