@@ -1,5 +1,7 @@
 # ATU Smart Parking
 
+[Онлайн сайтты ашу](https://aitbaev1ernur.github.io/atu-smart-parking/)
+
 Сайран кампусы маңындағы жол бойы тұрақтарының демо картасы.
 
 - Қолданушы: `user` / `demo123`. Бір бос орынды таңдай алады.
