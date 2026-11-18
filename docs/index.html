@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="АТУ Сайран кампусының интерактивті тұрақ картасы">
+<title>ATU Smart Parking</title>
+<link rel="icon" href="atu.svg" type="image/svg+xml">
+<link rel="stylesheet" href="leaflet.css">
+<link rel="stylesheet" href="style.css">
+<script defer src="leaflet.js"></script>
+<script defer src="campus-map.js"></script>
+<script defer src="app.js"></script>
+<script defer src="login.js"></script>
+</head>
+<body>
+<header><div class="top wrap">
+<a class="brand" href="./"><img src="atu.svg" alt="АТУ логотипі"><span>ATU <strong>Smart Parking</strong><small>Алматы технологиялық университеті</small></span></a>
+<div class="top-actions">
+<a class="campus" id="offline-download" href="atu-parking-offline.html" download>Офлайн нұсқаны жүктеу ↓</a>
+<span id="active-role" class="role-tag" hidden></span>
+<button id="sign-out" class="campus" type="button" hidden>Шығу</button>
+</div>
+</div></header>
+<main class="wrap login-main" id="login">
+<section class="login-panel" aria-labelledby="login-title">
+<div class="login-intro">
+<p class="location">АТУ №2 КОРПУС · САЙРАН</p>
+<h1>Жол бойындағы тұрақ картасы</h1>
+<p>Қолданушы ретінде бір бос орынды таңдаңыз немесе әкімші режимінде тұрақтардың күйін басқарыңыз.</p>
+</div>
+<div class="login-form">
+<h2 id="login-title">Демо кіру</h2>
+<p>Рөлді таңдаңыз немесе демо деректерді енгізіңіз.</p>
+<div class="demo-accounts" aria-label="Демо аккаунттар">
+<button type="button" data-demo="user"><strong>Қолданушы</strong><small>user / demo123</small></button>
+<button type="button" data-demo="admin"><strong>Әкімші</strong><small>admin / admin123</small></button>
+</div>
+<form id="login-form">
+<label for="username">Логин</label>
+<input id="username" name="username" type="text" autocapitalize="none" spellcheck="false" autocomplete="off" required>
+<label for="password">Құпиясөз</label>
+<input id="password" name="password" type="password" autocomplete="off" required>
+<p class="login-error" id="login-error" role="alert" hidden>Демо логин немесе құпиясөз қате.</p>
+<button type="submit">Кіру</button>
+</form>
+<p class="login-note">Демо аккаунттар. Жеке құпиясөзіңізді енгізбеңіз.</p>
+</div>
+</section>
+</main>
+<main class="wrap" id="dashboard" hidden>
+<section class="hero" aria-labelledby="title">
+<div class="hero-content"><p class="location">● &nbsp; АЛМАТЫ · АТУ №2 КОРПУС</p>
+<h1 id="title">Сайран кампусының<br>тұрақ картасы</h1>
+<p>Картадан тұрақ орнын таңдаңыз және демо модельдегі күйін тексеріңіз.</p>
+<button id="find-free" type="button" hidden>Бос орын таңдау ↓</button></div>
+<div class="hero-art" aria-hidden="true"><span>P</span></div>
+</section>
+<section class="stats" aria-label="Тұрақ статистикасы">
+<div><span class="dot total"></span><span>Барлық орын</span><strong id="total"></strong></div>
+<div><span class="dot free"></span><span>Бос орын</span><strong id="free"></strong></div>
+<div><span class="dot busy"></span><span>Бос емес</span><strong id="busy"></strong></div>
+</section>
+<section class="workspace" aria-label="Карта және тұрақ орындары">
+<div class="panel map-panel">
+<div class="panel-head"><div><h2>Кампус картасы</h2><p>Фурқат көшесі, 348/4 · Алматы · Офлайн карта</p></div><button id="recenter" type="button" title="Кампусқа оралу" aria-label="Кампусқа оралу">◎</button></div>
+<div id="map" aria-label="Сайран кампусының интерактивті картасы"></div>
+<div id="map-warning" hidden>Интерактивті карта жүктелмеді.</div>
+<div class="legend"><span><i class="dot free"></i>Бос</span><span><i class="dot busy"></i>Бос емес</span><span><i class="dot total"></i>АТУ корпусы</span></div>
+</div>
+<aside class="panel side">
+<div class="panel-head"><div><h2>Тұрақ орындары</h2><p>Картадан немесе тізімнен таңдаңыз</p></div></div>
+<div class="filters" aria-label="Күй бойынша сүзгі"><button data-filter="all" aria-pressed="true">Барлығы</button><button data-filter="free" aria-pressed="false">Бос</button><button data-filter="busy" aria-pressed="false">Бос емес</button></div>
+<p id="reservation" class="reservation" hidden></p>
+<div id="spots" class="spots"></div>
+<div class="detail" id="detail" hidden><div><strong id="choice"></strong><span id="chosen-status"></span></div><p id="chosen-road"></p><button id="toggle" type="button" hidden></button></div>
+</aside>
+</section>
+<section class="notice"><div><strong>Демо режим</strong><p>Көшелер мен ғимараттар OpenStreetMap дерегінен алынды. Жол жиегіндегі орындар демо үшін сызылды. Олардың нақты тұрақ екені тексерілмеген және күйлері датчиктен алынбайды.</p></div><button id="reset" type="button" hidden>Күйлерді қалпына келтіру</button></section>
+<span id="announcement" class="sr-only" role="status"></span>
+</main>
+<footer class="wrap"><span id="offline-state">ATU Smart Parking</span><a href="https://atu.edu.kz/kk/" target="_blank" rel="noopener">АТУ сайты ↗</a></footer>
+</body>
+</html>
